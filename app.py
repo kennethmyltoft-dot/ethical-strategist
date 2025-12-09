@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 
 # --- 1. KONFIGURATION ---
-MODEL_ID = "gemini-2.5-flash"  # Eller gemini-2.0-flash-exp hvis tilgængelig
+MODEL_ID = "gemini-2.0-flash"  # Eller gemini-2.0-flash-exp hvis tilgængelig
 
 generation_config = {
   "temperature": 0.7,
