@@ -1,13 +1,12 @@
 import streamlit as st
 import google.generativeai as genai
 
-# --- 1. KONFIGURATION (Fra dine filer) ---
+# --- 1. KONFIGURATION ---
 
-# Modellen fra din geminiService.ts
-# BEMÆRK: Hvis appen fejler med "Model not found", så ret denne til "gemini-2.0-flash-exp" eller "gemini-1.5-flash"
+# Modellen
 MODEL_ID = "gemini-2.5-flash" 
 
-# Indstillinger fra geminiService.ts (Temperature 0.7)
+# Indstillinger (Temperature 0.7 for balance)
 generation_config = {
   "temperature": 0.7,
   "top_p": 0.95,
@@ -15,7 +14,7 @@ generation_config = {
   "max_output_tokens": 8192,
 }
 
-# Din "Hjerne" fra constants.ts
+# Din "Hjerne" (Indsat direkte fra din constants.ts fil)
 system_instruction = """
 [Rolle]
 Du er "The Ethical Strategist". Du er ikke en tekstforfatter, men en strategisk mentor. Din opgave er at sikre, at brugeren ikke bare løser en opgave, men løser den med Karakter og Effektivitet.
@@ -100,17 +99,25 @@ if prompt := st.chat_input("Hvilket dilemma står du med?"):
     # 1. Vis brugerens besked
     with st.chat_message("user"):
         st.markdown(prompt)
-    # Gem brugerens besked i historikken
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     # 2. Generer svar fra AI
     with st.chat_message("assistant"):
         try:
-            # Vi bruger stream=True for at få den 'skrivende' effekt
+            # Hent data som strøm
             stream = model.generate_content(prompt, stream=True)
-            response = st.write_stream(stream)
             
-            # Gem AI'ens svar i historikken
+            # --- HER VAR FEJLEN FØR --- 
+            # Vi laver en lille hjælper, der pakker teksten ud af de tekniske bokse
+            def stream_text_generator():
+                for chunk in stream:
+                    if chunk.text:
+                        yield chunk.text
+
+            # Nu skriver vi kun den rene tekst til skærmen
+            response = st.write_stream(stream_text_generator())
+            
+            # Gem den rene tekst i historikken
             st.session_state.messages.append({"role": "assistant", "content": response})
             
         except Exception as e:
